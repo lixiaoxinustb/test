@@ -1,0 +1,31 @@
+#NOTE: developer tested the commands by folloing actions:
+#      docker pull charade/xlibbox:latest
+#      docker images
+#      docker run --memory=2g -i -t charade/xlibbox:latest /bin/bash
+#      
+#NOTE: debug RUN line one by one
+#      merge multi RUN lines as one it becomes stable as every line creates a commit which has a limit
+FROM charade/xlibbox:zero
+
+MAINTAINER Charlie Xia <xia.stanford@gmail.com>
+
+WORKDIR $HOME/
+ENV PATH "PATH=$PATH:$HOME/bin"
+RUN ulimit -s unlimited
+
+### install cibersort ###
+COPY ./CIBERSORT.R $HOME/bin
+COPY ./LM22.txt $HOME
+COPY ./sum_3.txt $HOME
+
+### install R packages ###
+RUN mkdir -p $(Rscript -e 'cat(Sys.getenv("R_LIBS_USER"))')
+RUN Rscript -e 'install.packages("e1071",repos="http://cran.us.r-project.org")'
+RUN Rscript -e 'install.packages("parallel",repos="http://cran.us.r-project.org")'
+RUN Rscript -e 'install.packages("optparse",repos="http://cran.us.r-project.org")'
+RUN Rscript -e 'source("http://bioconductor.org/biocLite.R"); biocLite("preprocessCore",ask=F)'
+
+### test cibersort
+RUN CIBERSORT.R LM22.txt sum_3.txt
+
+
